@@ -128,6 +128,35 @@
                 }
             }
         },
+        "cgmlst_options": {
+            "title": "cgMLST options",
+            "type": "object",
+            "fa_icon": "fas fa-arrow-left",
+            "description": "Parameters relating to cgMLST analysis.",
+            "properties": {
+                "cgmlst": {
+                    "type": "boolean",
+                    "title": "cgMLST mode",
+                    "default": false,
+                    "description": "Run the cgMLST analysis on the assembly results if set to True.",
+                    "help_text": "cgMLST mode adds further analysis options to the workflow such as allele calling and tree reconstruction."
+                },
+                "scheme_database": {
+                    "type": "string",
+                    "title": "Scheme database for chewBBACA",
+                    "format": "path",
+                    "description": "Path to scheme directory",
+                    "help_text": "The scheme database is used for allele calling with chewBBACA."
+                },
+                "cgmlst_profile": {
+                    "type": "string",
+                    "title": "cgMLST profile for chewBBACA",
+                    "format": "path",
+                    "description": "Path to cgMLST profile TSV file",
+                    "help_text": "The cgMLST profile is used for profile joining with chewBBACA."
+                }
+            }
+        },
         "advanced_options": {
             "title": "Advanced Options",
             "type": "object",
@@ -289,6 +318,9 @@
         },
         {
             "$ref": "#/definitions/isolate_options"
+        },
+        {
+            "$ref": "#/definitions/cgmlst_options"
         },
         {
             "$ref": "#/definitions/advanced_options"

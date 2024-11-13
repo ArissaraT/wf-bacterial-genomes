@@ -25,6 +25,8 @@ include {
     reportingCheckpoint;
 } from './modules/local/checkpoints'
 
+include { run_cgmlst } from './modules/local/cgmlst'
+
 OPTIONAL_FILE = file("$projectDir/data/OPTIONAL_FILE")
 FLYE_MIN_COVERAGE_THRESHOLD = 5
 
@@ -436,6 +438,8 @@ workflow calling_pipeline {
     take:
         reads
         reference
+        scheme
+        cgmlstProfile
     main:
         reads.branch { meta, reads, stats -> 
             reads : meta.n_seqs > 0
@@ -613,6 +617,24 @@ workflow calling_pipeline {
                 map { meta, reads, stats -> [ meta, "not-met" ] }
         }
 
+        // cgmlst analysis
+        if (params.cgmlst && !params.scheme_database && params.cgmlst_profile) {
+            throw new Exception("cgMLST analysis selected, a scheme database must be provided through the --scheme_database parameter.")
+        }
+        if (params.cgmlst && params.scheme_database && !params.cgmlst_profile) {
+            throw new Exception("cgMLST analysis selected, a cgMLST profile must be provided through the --cgmlst_profile parameter.")
+        }
+        if (params.cgmlst && params.scheme_database && params.cgmlst_profile) {
+            run_cgmlst = run_cgmlst (
+                consensus,
+                params.scheme_database,
+                params.cgmlst_profile
+            )
+            cgmlst_tree = run_cgmlst.cgmlst_grapetree
+        } else {
+            cgmlst_tree = Channel.empty()
+        }
+
         // Checkpoint 5 - AMR / isolates
         amr_checkpoint = amrCheckpoint(amr_status
         | mix( failed_samples )
@@ -739,7 +761,8 @@ workflow calling_pipeline {
             workflow_params,
             software_versions,
             run_model,
-            serotype.map { meta, sero -> sero }
+            serotype.map { meta, sero -> sero },
+            cgmlst_tree.map { meta, tree -> tree }
         )
 
     emit:
@@ -788,8 +811,10 @@ workflow {
     } 
 
    
-    reference = params.reference
-    results = calling_pipeline(samples, reference)
+    reference     = params.reference
+    scheme        = params.scheme_database
+    cgmlstProfile = params.cgmlst_profile
+    results = calling_pipeline(samples, reference, scheme, cgmlstProfile)
 
     results.all_out
     | output
