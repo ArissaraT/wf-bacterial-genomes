@@ -3,7 +3,7 @@ process medakaInference {
     label "medaka"
     cpus 2
     // medaka rarely uses more than 8 GB, but sometimes it does happen
-    memory { task.attempt == 1 ? "8 GB" : "15 GB" }
+    memory { task.attempt == 1 ? "8 GB" : "12 GB" }
     errorStrategy { task.exitStatus == 137 ? "retry" : "terminate" }
     maxRetries 1
     input:
