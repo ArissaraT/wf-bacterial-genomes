@@ -151,7 +151,7 @@
                 "cgmlst_profile": {
                     "type": "string",
                     "title": "cgMLST profile for chewBBACA",
-                    "format": "path",
+                    "format": "file-path",
                     "description": "Path to cgMLST profile TSV file",
                     "help_text": "The cgMLST profile is used for profile joining with chewBBACA."
                 }
