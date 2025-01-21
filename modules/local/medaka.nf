@@ -1,9 +1,9 @@
 process medakaInference {
     // run medaka consensus for an individual region
     label "medaka"
-    cpus 2
+    cpus 1
     // medaka rarely uses more than 8 GB, but sometimes it does happen
-    memory { task.attempt == 1 ? "8 GB" : "12 GB" }
+    memory { task.attempt == 1 ? "5 GB" : "7 GB" }
     errorStrategy { task.exitStatus == 137 ? "retry" : "terminate" }
     maxRetries 1
     input:
@@ -33,7 +33,7 @@ process medakaInference {
     medaka --version
     echo ${basecall_model}
     medaka inference align.bam "${meta.alias}.consensus_probs.hdf" \
-        --threads 2 --regions "${region}" --model ${basecall_model}
+        --threads 1 --regions "${region}" --model ${basecall_model}
     """
 }
 

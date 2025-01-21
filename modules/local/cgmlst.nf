@@ -1,7 +1,7 @@
 process chewbbacaAlleleCall {
     label "chewbbaca"
     cpus 1
-    memory "1 GB"
+    memory "2 GB"
     input:
         tuple val(meta), path(assembly)
         path(schema_database)
@@ -17,7 +17,7 @@ process chewbbacaAlleleCall {
 process chewbbacaJoinProfiles {
     label "chewbbaca"
     cpus 1
-    memory "1 GB"
+    memory "2 GB"
     input:
         tuple val(meta), path(profile_1), path(profile_2)
     output:
@@ -32,7 +32,7 @@ process chewbbacaJoinProfiles {
 process grapetree {
     label "grapetree"
     cpus 1
-    memory "1 GB"
+    memory "2 GB"
     input:
         tuple val(meta), path(joined_profile)
     output:

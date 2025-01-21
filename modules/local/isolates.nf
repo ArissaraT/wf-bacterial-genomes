@@ -30,7 +30,7 @@ process getPointfinderSpecies {
 
 process resfinder {
     label "amr"
-    cpus 2
+    cpus 1
     memory "2 GB"
     input:
         tuple val(meta), path("input_genome.fasta.gz"), val(species)
@@ -60,7 +60,7 @@ process resfinder {
 process processResfinder {
     // Disinfection not processed yet (CW-2106)
     label "wfbacterialgenomes"
-    cpus 2
+    cpus 1
     memory "2 GB"
     input:
         tuple val(meta), path("${meta.alias}_resfinder_results"), val(species)

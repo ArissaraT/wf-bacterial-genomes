@@ -551,7 +551,7 @@ def xam_ingress(Map arguments)
 process fastcat {
     label "ingress"
     label "wf_common"
-    cpus 4
+    cpus 1
     memory "2 GB"
     input:
         tuple val(meta), path(input_src, stageAs: "input_src")
@@ -662,7 +662,7 @@ process validateIndex {
 process mergeBams {
     label "ingress"
     label "wf_common"
-    cpus 3
+    cpus 1
     memory "4 GB"
     input: tuple val(meta), path("input_bams/reads*.bam")
     output: tuple val(meta), path("reads.bam"), path("reads.bam.bai")
@@ -679,12 +679,12 @@ process mergeBams {
 process catSortBams {
     label "ingress"
     label "wf_common"
-    cpus 4
+    cpus 1
     memory "4 GB"
     input: tuple val(meta), path("input_bams/reads*.bam")
     output: tuple val(meta), path("reads.bam"), path("reads.bam.bai")
     script:
-    def sort_threads = Math.max(1, task.cpus - 2)
+    def sort_threads = Math.max(1, task.cpus - 1)
     """
     samtools cat -b <(find input_bams -name 'reads*.bam' | sort) \
     | samtools sort - -@ ${sort_threads} --write-index -o reads.bam##idx##reads.bam.bai
@@ -695,7 +695,7 @@ process catSortBams {
 process sortBam {
     label "ingress"
     label "wf_common"
-    cpus 3
+    cpus 1
     memory "4 GB"
     input: tuple val(meta), path("reads.bam")
     output: tuple val(meta), path("reads.sorted.bam"), path("reads.sorted.bam.bai")
@@ -710,7 +710,7 @@ process sortBam {
 process bamstats {
     label "ingress"
     label "wf_common"
-    cpus 3
+    cpus 1
     memory "4 GB"
     input:
         tuple val(meta), path("reads.bam"), path("reads.bam.bai")
@@ -1207,7 +1207,7 @@ process validate_sample_sheet {
 
 // Generate an index for an input XAM file
 process samtools_index {
-    cpus 4
+    cpus 1
     label "ingress"
     label "wf_common"
     memory 4.GB

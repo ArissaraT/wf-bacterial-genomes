@@ -51,7 +51,7 @@ process readStats {
 
 process coverStats {
     label "wfbacterialgenomes"
-    cpus 2
+    cpus 1
     memory "2 GB"
     input:
         tuple val(meta), path("align.bam"), path("align.bam.bai")
@@ -71,7 +71,7 @@ process coverStats {
 process deNovo {
     label "wfbacterialgenomes"
     cpus params.threads
-    memory "12 GB"
+    memory "7 GB"
     input:
         tuple val(meta), path("reads.fastq.gz")
     output:
@@ -128,7 +128,7 @@ process deNovo {
 process alignReads {
     label "wfbacterialgenomes"
     cpus params.threads
-    memory "8 GB"
+    memory "7 GB"
     input:
         tuple val(meta), path("reads.fastq.gz"), path("ref.fasta.gz")
     output:
@@ -290,7 +290,7 @@ process collect_results {
 process createRunModel {
     label "wfbacterialgenomes"
     cpus 1
-    memory "12 GB"
+    memory "7 GB"
     input:
         path "sample_results/*"
         val metadata
@@ -310,7 +310,7 @@ process createRunModel {
 process makeReport {
     label "wf_common"
     cpus 1
-    memory "12 GB"
+    memory "7 GB"
     input:
         path "versions/*"
         path "params.json"
@@ -359,7 +359,7 @@ process makeReport {
 process makePerSampleReports {
     label "wf_common"
     cpus 1
-    memory "12 GB"
+    memory "7 GB"
     input:
         path "versions.txt"
         path "params.json"
