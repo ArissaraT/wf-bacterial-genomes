@@ -147,6 +147,28 @@ process bandageImage {
 }
 
 
+process quast {
+    // run quast to get the genome assembly statistics
+    label "quast"
+    cpus params.threads
+    memory "2 GB"
+    input:
+        tuple val(meta), path("${meta.alias}.medaka.fasta.gz")
+    output:
+        tuple val(meta), path("${meta.alias}")      , emit: output
+        tuple val(meta), path("*.quast_report.tsv") , emit: tsv
+        tuple val(meta), path("*.quast_report.html"), emit: html
+
+    script:
+    """
+    quast.py --output-dir ${meta.alias} --threads $task.cpus ${meta.alias}.medaka.fasta.gz
+    
+    mv ${meta.alias}/report.tsv ${meta.alias}.quast_report.tsv
+    mv ${meta.alias}/report.html ${meta.alias}.quast_report.html
+    """
+}
+
+
 process alignReads {
     label "wfbacterialgenomes"
     cpus params.threads
@@ -239,16 +261,28 @@ process mlstVersion {
     cpus 1
     memory "2 GB"
     input:
-        path "input_version.txt"
+        path "input_versions.txt"
     output:
         path "mlst_version.txt"
     """
-    cat "input_version.txt" >> "mlst_version.txt"
+    cat "input_versions.txt" >> "mlst_version.txt"
     mlst --version | sed 's/ /,/' >> "mlst_version.txt"
     """
 }
 
-
+process quastVersion {
+    label "quast"
+    cpus 1
+    memory "1 GB"
+    input:
+        path "input_versions.txt"
+    output:
+        path "quast_version.txt"
+    """
+    cat "input_versions.txt" >> "quast_version.txt"
+    quast.py --version |& sed 's/QUAST v/quast,/' >> "quast_version.txt"
+    """
+}
 
 process getVersions {
     label "wfbacterialgenomes"
@@ -514,7 +548,7 @@ workflow calling_pipeline {
                     log.warn "Flye failed for sample '$meta.alias' as no disjointigs were assembled."
                 }
             }
-            bandage_png.view()
+
             // Creat channel of failed samples for checkpoints "not-met"
             failed_samples = input_reads.no_reads.mix(
                 deNovo.out.failed | filter { meta, failed -> failed != "0"}
@@ -573,6 +607,11 @@ workflow calling_pipeline {
         | combine(named_refs, by: 0)
         | combine(basecall_models, by: 0)
         | medakaConsensus
+        
+        // run quast
+        quast(consensus)
+        quast_report_tsv  = quast.out.tsv
+        quast_report_html = quast.out.html
 
         // Checkpoint 2 - Assembly
         assembly_checkpoint = assemblyCheckpoint(consensus
@@ -668,7 +707,8 @@ workflow calling_pipeline {
         prokka_version = prokkaVersion()
         medaka_version = medakaVersion(prokka_version)
         mlst_version = mlstVersion(medaka_version)
-        software_versions = getVersions(mlst_version)
+        quast_version = quastVersion(mlst_version)
+        software_versions = getVersions(quast_version)
         workflow_params = getParams()
 
         // Taken from per sample reports to fill in wf.Sample
@@ -788,7 +828,9 @@ workflow calling_pipeline {
             run_model,
             serotype.map { meta, sero -> sero },
             cgmlst_tree.map { meta, tree -> tree },
-            bandage_png.map { meta, png -> png}
+            bandage_png.map { meta, png -> png},
+            quast_report_tsv.map { meta, tsv -> tsv },
+            quast_report_html.map { meta, html -> html }
         )
 
     emit:
