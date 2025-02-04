@@ -79,6 +79,7 @@ process deNovo {
             path("${meta.alias}.draft_assembly.fasta.gz"),
             path("${meta.alias}.flye_stats.tsv"),
             optional: true, emit: asm
+        tuple val(meta), path("${meta.alias}.flye_assembly_graph.gfa"), optional: true, emit: gfa
         tuple val(meta), env(COV_FAIL), emit: failed
     script:
     // flye may fail due to low coverage; in this case we don't want to cause the whole
@@ -95,6 +96,7 @@ process deNovo {
     if [[ \$FLYE_EXIT_CODE -eq 0 ]]; then
         mv output/assembly.fasta "./${meta.alias}.draft_assembly.fasta"
         mv output/assembly_info.txt "./${meta.alias}.flye_stats.tsv"
+        mv output/assembly_graph.gfa "./${meta.alias}.flye_assembly_graph.gfa"
         bgzip "${meta.alias}.draft_assembly.fasta"
     else
         # flye failed --> check the log to check why
@@ -121,6 +123,26 @@ process deNovo {
             ( exit \$FLYE_EXIT_CODE )
         fi
     fi
+    """
+}
+
+
+process bandageImage {
+    // run bandage to create an image from the assembly graph
+    label "bandage"
+    cpus 2
+    memory "2 GB"
+    input:
+        tuple val(meta), path("${meta.alias}.flye_assembly_graph.gfa")
+    output:
+        tuple val(meta), path("*.bandage.png"), emit: png
+        tuple val(meta), path("*.bandage.svg"), emit: svg
+
+    script:
+        def bandage_opts = params.bandage_opts ?: ""
+    """
+    Bandage image ${meta.alias}.flye_assembly_graph.gfa ${meta.alias}.bandage.png $bandage_opts
+    Bandage image ${meta.alias}.flye_assembly_graph.gfa ${meta.alias}.bandage.svg $bandage_opts
     """
 }
 
@@ -481,6 +503,9 @@ workflow calling_pipeline {
         if (!params.reference_based_assembly){
             log.info("Running Denovo assembly.")
             deNovo(input_reads.reads)
+            // create image from the assembly output graph using bandage
+            bandageImage(deNovo.out.gfa)
+            bandage_png = bandageImage.out.png
             // some samples might have failed flye due to low coverage
             deNovo.out.failed.map { meta, failed ->
                 if (failed == "1") {
@@ -489,7 +514,7 @@ workflow calling_pipeline {
                     log.warn "Flye failed for sample '$meta.alias' as no disjointigs were assembled."
                 }
             }
-
+            bandage_png.view()
             // Creat channel of failed samples for checkpoints "not-met"
             failed_samples = input_reads.no_reads.mix(
                 deNovo.out.failed | filter { meta, failed -> failed != "0"}
@@ -762,7 +787,8 @@ workflow calling_pipeline {
             software_versions,
             run_model,
             serotype.map { meta, sero -> sero },
-            cgmlst_tree.map { meta, tree -> tree }
+            cgmlst_tree.map { meta, tree -> tree },
+            bandage_png.map { meta, png -> png}
         )
 
     emit:

@@ -244,6 +244,12 @@
                     "default": 1000,
                     "Title": "Minimum read length",
                     "description": "Reads below this threshold will be removed from analysis."
+                },
+                "bandage_opts": {
+                    "type": "string",
+                    "Title": "Additional bandage options",
+                    "description": "Command-line arguments for bandage",
+                    "help_text": "[Command line arguments](https://github.com/rrwick/Bandage/wiki/Command-line) which can be used to alter the bandage output image."
                 }
             },
             "dependencies": {
