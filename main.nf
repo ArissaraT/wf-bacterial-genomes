@@ -270,6 +270,20 @@ process mlstVersion {
     """
 }
 
+process bandageVersion {
+    label "bandage"
+    cpus 1
+    memory "1 GB"
+    input:
+        path "input_versions.txt"
+    output:
+        path "bandage_version.txt"
+    """
+    cat "input_versions.txt" >> "bandage_version.txt"
+    Bandage --version | sed 's/Version: /bandage,/' >> "bandage_version.txt"
+    """
+}
+
 process quastVersion {
     label "quast"
     cpus 1
@@ -280,9 +294,24 @@ process quastVersion {
         path "quast_version.txt"
     """
     cat "input_versions.txt" >> "quast_version.txt"
-    quast.py --version |& sed 's/QUAST v/quast,/' >> "quast_version.txt"
+    quast.py --version | sed 's/QUAST v/quast,/' >> "quast_version.txt"
     """
 }
+
+process cgmlstVersion {
+    label "chewbbaca"
+    cpus 1
+    memory "1 GB"
+    input:
+        path "input_versions.txt"
+    output:
+        path "cgmlst_version.txt"
+    """
+    cat "input_versions.txt" >> "cgmlst_version.txt"
+    chewBBACA.py --version | sed 's/chewBBACA version: /chewbbaca,/' >> "cgmlst_version.txt"
+    """
+}
+
 
 process getVersions {
     label "wfbacterialgenomes"
@@ -707,8 +736,10 @@ workflow calling_pipeline {
         prokka_version = prokkaVersion()
         medaka_version = medakaVersion(prokka_version)
         mlst_version = mlstVersion(medaka_version)
-        quast_version = quastVersion(mlst_version)
-        software_versions = getVersions(quast_version)
+        bandage_version = bandageVersion(mlst_version)
+        quast_version = quastVersion(bandage_version)
+        cgmlst_version = cgmlstVersion(quast_version)
+        software_versions = getVersions(cgmlst_version)
         workflow_params = getParams()
 
         // Taken from per sample reports to fill in wf.Sample
