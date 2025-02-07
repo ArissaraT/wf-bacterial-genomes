@@ -130,7 +130,7 @@ process deNovo {
 process bandageImage {
     // run bandage to create an image from the assembly graph
     label "bandage"
-    cpus 2
+    cpus 1
     memory "2 GB"
     input:
         tuple val(meta), path("${meta.alias}.flye_assembly_graph.gfa")

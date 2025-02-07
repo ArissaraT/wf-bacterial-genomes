@@ -25,7 +25,6 @@ process chewbbacaJoinProfiles {
     script:
     """
     chewBBACA.py JoinProfiles -p ${profile_1} ${profile_2} -o ${meta.alias}_joined_profile.tsv
-    sed -i  s'/FILE/#FILE/' ${meta.alias}_joined_profile.tsv
     """
 }
 
